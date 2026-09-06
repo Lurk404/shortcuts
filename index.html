@@ -223,6 +223,13 @@ const DATA = [
       { type:"shortcut", label:"Quick Find", variants:[["/"]] },
     ]},
   ]},
+    { tool: "Chrome / Edge", sections: [
+    { name: null, items: [
+      { type:"shortcut", label:"Cycle tabs", variants:[["Ctrl","Tab"],["Ctrl","Shift","Tab"]] },
+      { type:"shortcut", label:"Search tabs", variants:[["Ctrl","Shift","A"],["Cmd","Shift","A"]] },
+      { type:"shortcut", label:"Open DevTools", variants:[["Ctrl","Shift","I"],["Cmd","Opt","I"]] },
+    ]},
+  ]},
   { tool: "macOS", sections: [
     { name: "System", items: [
       { type:"shortcut", label:"Show desktop", variants:[["Cmd","F3"]] },
@@ -243,6 +250,14 @@ const DATA = [
       { type:"shortcut", label:"Archive message", variants:[["Ctrl","Cmd","A"]] },
     ]},
   ]},
+  { tool: "Word", sections: [
+    { name: null, items: [
+      { type:"trick", label:"Jump to the Navigation pane", note:"Click the current page number in the status bar." },
+      { type:"trick", label:"Insert placeholder text", note:"=lorem() for default filler, or =lorem(p,l) to set paragraphs (p) and lines per paragraph (l). =rand() works the same way." },
+      { type:"shortcut", label:"Show/hide formatting marks", variants:[["Ctrl","Shift","8"],["Cmd","Shift","8"]] },
+      { type:"link", label:"Add, format, or delete captions", url:"https://support.microsoft.com/en-US/Word/add-format-or-delete-captions-in-word" },
+    ]},
+  ]},
   { tool: "Windows", sections: [
     { name: "File Explorer", items: [
       { type:"shortcut", label:"Launch File Explorer", variants:[["Win","E"]] },
@@ -258,21 +273,6 @@ const DATA = [
       { type:"shortcut", label:"Open Settings", variants:[["Win","I"]] },
       { type:"shortcut", label:"Clipboard history", variants:[["Win","V"]] },
       { type:"shortcut", label:"Snap layouts", variants:[["Win","Z"]] },
-    ]},
-  ]},
-  { tool: "Chrome / Edge", sections: [
-    { name: null, items: [
-      { type:"shortcut", label:"Cycle tabs", variants:[["Ctrl","Tab"],["Ctrl","Shift","Tab"]] },
-      { type:"shortcut", label:"Search tabs", variants:[["Ctrl","Shift","A"],["Cmd","Shift","A"]] },
-      { type:"shortcut", label:"Open DevTools", variants:[["Ctrl","Shift","I"],["Cmd","Opt","I"]] },
-    ]},
-  ]},
-  { tool: "Word", sections: [
-    { name: null, items: [
-      { type:"trick", label:"Jump to the Navigation pane", note:"Click the current page number in the status bar." },
-      { type:"trick", label:"Insert placeholder text", note:"=lorem() for default filler, or =lorem(p,l) to set paragraphs (p) and lines per paragraph (l). =rand() works the same way." },
-      { type:"shortcut", label:"Show/hide formatting marks", variants:[["Ctrl","Shift","8"],["Cmd","Shift","8"]] },
-      { type:"link", label:"Add, format, or delete captions", url:"https://support.microsoft.com/en-US/Word/add-format-or-delete-captions-in-word" },
     ]},
   ]},
   { tool: "Excel", sections: [
