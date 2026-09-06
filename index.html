@@ -234,7 +234,7 @@ const DATA = [
   { tool: "macOS", sections: [
     { name: "System", items: [
       { type:"shortcut", label:"Show desktop", variants:[["Cmd","F3"]] },
-      { type:"shortcut", label:"Search clipboard", variants:[["Cmd","Space","Cmd","4"]] },
+      { type:"shortcut", label:"Search clipboard", variants:[["Cmd","Space"],["Cmd","4"]], join:"then" },
       { type:"shortcut", label:"Cycle application windows", variants:[["Cmd","`"]] },
     ]},
     { name: "Finder", items: [
@@ -308,23 +308,25 @@ const DEFAULT_ORDER = ["Firefox","macOS","Windows","Chrome / Edge","Word","Excel
 
 function esc(s){ return String(s).replace(/"/g,'&quot;'); }
 
-function renderKeys(variants){
+function renderKeys(variants, joinWord){
+  var word = joinWord || "or";
   return variants.map(function(combo){
     return '<span class="combo">' + combo.map(function(k){ return '<span class="key">' + k + '</span>'; }).join('<span class="plus">+</span>') + '</span>';
-  }).join('<span class="or">or</span>');
+  }).join('<span class="or">' + word + '</span>');
 }
 
 function renderItem(item, toolName, sectionName){
   var context = (toolName + " " + (sectionName || "")).toLowerCase();
   if(item.type === "shortcut"){
+    var joinWord = item.join || "or";
     var searchText = (context + " " + item.label + " " + item.variants.flat().join(" ")).toLowerCase();
     var copyText = item.variants[0].join("+");
-    var ariaCombo = item.variants.map(function(c){ return c.join(" + "); }).join(" or ");
+    var ariaCombo = item.variants.map(function(c){ return c.join(" + "); }).join(" " + joinWord + " ");
     return '<div class="item item--shortcut" tabindex="0" role="button" ' +
       'aria-label="Copy shortcut for ' + esc(item.label) + ': ' + esc(ariaCombo) + '" ' +
       'data-search="' + esc(searchText) + '" data-copy="' + esc(copyText) + '">' +
       '<span class="item-label">' + item.label + '</span>' +
-      '<span class="item-combo-wrap">' + renderKeys(item.variants) + '<span class="copied-flag" aria-hidden="true">Copied</span></span>' +
+      '<span class="item-combo-wrap">' + renderKeys(item.variants, joinWord) + '<span class="copied-flag" aria-hidden="true">Copied</span></span>' +
       '</div>';
   }
   if(item.type === "trick"){
