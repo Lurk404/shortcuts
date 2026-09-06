@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shortcuts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1c2320;
+    --bg-card:#232b27;
+    --bg-key:#2c352f;
+    --key-skirt:#11150f;
+    --text:#e9e4d8;
+    --text-dim:#93a196;
+    --accent:#d9a441;
+    --accent-dim:#7a6534;
+    --line:#414b44;
+  }
+  *{box-sizing:border-box;}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  :focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
+  .visually-hidden{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  .page-header{
+    position:sticky; top:0; z-index:10;
+    background:rgba(28,35,32,0.94);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:22px 28px 18px;
+  }
+  .header-top{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    max-width:1180px; margin:0 auto; gap:20px; flex-wrap:wrap;
+  }
+  h1{
+    font-family:'JetBrains Mono',monospace;
+    font-size:1.6rem; font-weight:700; margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .subtitle{margin:0; color:var(--text-dim); font-size:0.92rem; max-width:52ch;}
+  .stats{
+    font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:var(--accent);
+    white-space:nowrap; padding-bottom:2px;
+  }
+  .search-wrap{max-width:1180px; margin:16px auto 0;}
+  #search{
+    width:100%; padding:11px 14px;
+    background:var(--bg-card); border:1px solid var(--line); border-radius:6px;
+    color:var(--text); font-family:'Inter',sans-serif; font-size:0.95rem;
+    transition:border-color 120ms, box-shadow 120ms;
+  }
+  #search::placeholder{color:var(--text-dim);}
+  #search:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(217,164,65,0.2);
+  }
+
+  .grid{
+    max-width:1180px; margin:26px auto; padding:0 28px 40px;
+    column-count:3; column-gap:22px;
+  }
+  @media (max-width:980px){ .grid{column-count:2;} }
+  @media (max-width:640px){ .grid{column-count:1; padding:0 16px 32px;} }
+
+  .tool-card{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:6px;
+    padding:16px 20px 18px; margin-bottom:20px;
+    break-inside:avoid; -webkit-column-break-inside:avoid;
+    display:inline-block; width:100%; vertical-align:top;
+  }
+  .tool-card.is-hidden{display:none;}
+  .tool-card.dragging{opacity:0.45;}
+
+  .tool-card-head{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    border-bottom:1px solid var(--line); margin-bottom:12px; padding-bottom:10px;
+  }
+  .tool-name{
+    font-family:'JetBrains Mono',monospace; font-size:1.08rem; font-weight:700;
+    margin:0;
+  }
+  .tool-controls{display:flex; align-items:center; gap:4px; flex-shrink:0;}
+  .ctrl-btn{
+    background:var(--bg-key); border:1px solid var(--line); color:var(--text);
+    border-radius:4px; width:26px; height:26px; min-width:24px; min-height:24px;
+    display:inline-flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:0.7rem; line-height:1; padding:0;
+  }
+  .ctrl-btn:hover:not(:disabled){border-color:var(--accent); color:var(--accent);}
+  .ctrl-btn:disabled{opacity:0.35; cursor:default;}
+  .drag-handle{
+    color:var(--text-dim); font-size:0.95rem; cursor:grab; padding:2px 6px;
+    letter-spacing:-2px; line-height:1;
+  }
+
+  .section{margin-bottom:16px;}
+  .section:last-child{margin-bottom:0;}
+  .section.is-hidden{display:none;}
+  .section-name{
+    font-size:0.95rem; font-weight:600; color:var(--text-dim);
+    margin:0 0 8px;
+  }
+
+  .item{
+    display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center;
+    gap:6px 12px; padding:7px 0; border-bottom:1px solid var(--line); min-width:0;
+  }
+  .items .item:last-child{border-bottom:none;}
+  .item.is-hidden{display:none;}
+
+  .item--shortcut{cursor:pointer;}
+  .item--shortcut:hover,
+  .item--shortcut:focus-visible{
+    background:rgba(217,164,65,0.08); margin:0 -8px; padding:7px 8px; border-radius:4px;
+  }
+
+  .item-label{font-size:0.9rem; min-width:0;}
+  .item-combo-wrap{
+    display:flex; flex-wrap:wrap; justify-content:flex-start; align-items:center;
+    gap:6px; min-width:0; max-width:100%; position:relative;
+  }
+  .combo{display:inline-flex; align-items:center; gap:3px; white-space:nowrap;}
+  .key{
+    font-family:'JetBrains Mono',monospace; font-size:0.72rem; font-weight:500;
+    background:var(--bg-key); color:var(--text);
+    border:1px solid var(--line); border-bottom:2px solid var(--key-skirt);
+    border-radius:4px; padding:2px 6px; line-height:1.4;
+  }
+  .plus{color:var(--text-dim); font-size:0.72rem;}
+  .or{color:var(--text-dim); font-size:0.72rem; font-style:italic; margin:0 2px;}
+  .copied-flag{
+    position:absolute; right:0; top:-1px;
+    font-size:0.7rem; color:var(--accent); background:var(--bg-card);
+    padding:1px 6px; border-radius:4px; opacity:0; pointer-events:none;
+    transition:opacity 150ms;
+  }
+  .item.copied .copied-flag{opacity:1;}
+  .item.copied .item-combo-wrap{opacity:0;}
+
+  .item--trick{
+    flex-direction:column; align-items:flex-start; gap:2px;
+    border-left:3px solid var(--accent-dim); padding-left:10px;
+  }
+  .item--trick .item-label{font-size:0.9rem; font-weight:500;}
+  .item-note{font-size:0.82rem; color:var(--text-dim);}
+
+  .item--link .item-link{
+    font-size:0.9rem; text-decoration:underline; text-decoration-color:var(--accent-dim);
+    min-width:0; overflow-wrap:break-word; word-break:break-word;
+  }
+  .item--link .item-link:hover{color:var(--accent);}
+  .item-domain{font-size:0.76rem; color:var(--text-dim);}
+
+  .page-footer{
+    max-width:1180px; margin:0 auto; padding:0 28px 40px;
+    color:var(--text-dim); font-size:0.82rem;
+  }
+  .page-footer code{
+    font-family:'JetBrains Mono',monospace; background:var(--bg-card);
+    padding:1px 5px; border-radius:3px; border:1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="header-top">
+    <div>
+      <h1>Shortcuts</h1>
+      <p class="subtitle">A running reference across every tool — search, or click a shortcut to copy it.</p>
+    </div>
+    <div class="stats" id="stats"></div>
+  </div>
+  <div class="search-wrap">
+    <label for="search" class="visually-hidden">Search shortcuts</label>
+    <input id="search" type="text" placeholder="Search shortcuts… (press / to focus, Esc to clear)" autocomplete="off" spellcheck="false">
+  </div>
+</header>
+
+<main class="grid" id="app"></main>
+
+<div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
+
+<footer class="page-footer">
+  <p>Data lives in the <code>DATA</code> array near the bottom of this file — add a tool, section, or shortcut there and refresh. No build step, no dependencies beyond the two Google Fonts. Card order is saved in this browser only.</p>
+</footer>
+
+<script>
+const DATA = [
+  { tool: "Firefox", sections: [
+    { name: "Tabs", items: [
+      { type:"shortcut", label:"Cycle tabs", variants:[["Ctrl","Tab"]] },
+      { type:"shortcut", label:"Show all open tabs", variants:[["Ctrl","Shift","Tab"]] },
+    ]},
+    { name: "Reader view", items: [
+      { type:"shortcut", label:"Open Reader view", variants:[["Cmd","Opt","R"],["F9"]] },
+      { type:"trick", label:"Force Reader view on any page", note:"Paste about:reader?url= in front of the page's URL." },
+    ]},
+    { name: "Address bar", items: [
+      { type:"trick", label:"Search operators", note:"Type @bookmarks, @tabs, @history, or @actions to search just that category." },
+    ]},
+    { name: "Screenshot", items: [
+      { type:"shortcut", label:"Screenshot", variants:[["Ctrl","Shift","S"],["Cmd","Shift","S"]] },
+    ]},
+  ]},
+  { tool: "macOS", sections: [
+    { name: "System", items: [
+      { type:"shortcut", label:"Show desktop", variants:[["Cmd","F3"]] },
+      { type:"shortcut", label:"Search clipboard", variants:[["Cmd","Space"],["Cmd","4"]] },
+      { type:"shortcut", label:"Cycle application windows", variants:[["Cmd","`"]] },
+    ]},
+    { name: "Finder", items: [
+      { type:"shortcut", label:"Remove all tags from a file", variants:[["Ctrl","0"]] },
+      { type:"shortcut", label:"Open selected item", variants:[["Cmd","Down"]] },
+    ]},
+    { name: "Reminders", items: [
+      { type:"shortcut", label:"Add a subtask", variants:[["Cmd","]"]] },
+    ]},
+    { name: "Numbers", items: [
+      { type:"shortcut", label:"Edit cell", variants:[["Opt","Enter"]] },
+    ]},
+    { name: "Mail", items: [
+      { type:"shortcut", label:"Archive message", variants:[["Ctrl","Cmd","A"]] },
+    ]},
+  ]},
+  { tool: "Windows", sections: [
+    { name: "File Explorer", items: [
+      { type:"shortcut", label:"Launch File Explorer", variants:[["Win","E"]] },
+      { type:"shortcut", label:"Search File Explorer", variants:[["F3"]] },
+      { type:"shortcut", label:"Rename file", variants:[["F2"]] },
+    ]},
+    { name: "Misc", items: [
+      { type:"shortcut", label:"Snipping tool", variants:[["Win","Shift","S"]] },
+      { type:"shortcut", label:"Color picker (PowerToys)", variants:[["Win","Shift","C"]] },
+    ]},
+    { name: "Settings", items: [
+      { type:"shortcut", label:"Mirror / project display", variants:[["Win","P"]] },
+      { type:"shortcut", label:"Open Settings", variants:[["Win","I"]] },
+      { type:"shortcut", label:"Clipboard history", variants:[["Win","V"]] },
+      { type:"shortcut", label:"Snap layouts", variants:[["Win","Z"]] },
+    ]},
+  ]},
+  { tool: "Chrome / Edge", sections: [
+    { name: null, items: [
+      { type:"shortcut", label:"Cycle tabs", variants:[["Ctrl","Tab"],["Ctrl","Shift","Tab"]] },
+      { type:"shortcut", label:"Search tabs", variants:[["Ctrl","Shift","A"],["Cmd","Shift","A"]] },
+      { type:"shortcut", label:"Open DevTools", variants:[["Ctrl","Shift","I"],["Cmd","Opt","I"]] },
+    ]},
+  ]},
+  { tool: "ShareX", sections: [
+    { name: null, items: [
+      { type:"shortcut", label:"Capture last region", variants:[["Ctrl","Alt","Print Screen"]] },
+      { type:"shortcut", label:"End GIF recording", variants:[["Shift","Print Screen"]] },
+    ]},
+  ]},
+  { tool: "Word", sections: [
+    { name: null, items: [
+      { type:"trick", label:"Jump to the Navigation pane", note:"Click the current page number in the status bar." },
+      { type:"trick", label:"Insert placeholder text", note:"=lorem() for default filler, or =lorem(p,l) to set paragraphs (p) and lines per paragraph (l). =rand() works the same way." },
+      { type:"shortcut", label:"Show/hide formatting marks", variants:[["Ctrl","Shift","8"],["Cmd","Shift","8"]] },
+      { type:"link", label:"Add, format, or delete captions", url:"https://support.microsoft.com/en-US/Word/add-format-or-delete-captions-in-word" },
+    ]},
+  ]},
+  { tool: "Excel", sections: [
+    { name: null, items: [
+      { type:"shortcut", label:"Line break in cell", variants:[["Alt","Enter"]] },
+      { type:"shortcut", label:"Edit cell", variants:[["F2"]] },
+      { type:"shortcut", label:"Filter column", variants:[["Ctrl","Shift","L"]] },
+      { type:"shortcut", label:"Format cells", variants:[["Ctrl","1"]] },
+      { type:"shortcut", label:"Jump to header row", variants:[["Ctrl","Up"]] },
+      { type:"link", label:"Split text into columns", url:"https://support.microsoft.com/en-us/excel/get-started/split-text-into-different-columns-with-the-convert-text-to-columns-wizard" },
+    ]},
+  ]},
+  { tool: "Audacity", sections: [
+    { name: null, items: [
+      { type:"link", label:"Recording desktop audio", url:"https://support.audacityteam.org/basics/recording-desktop-audio" },
+      { type:"link", label:"Removing clicks & pops", url:"https://support.audacityteam.org/repairing-audio/removing-clicks-pops" },
+      { type:"link", label:"De-clicker / de-esser plugins for speech", url:"https://forum.audacityteam.org/t/updated-de-clicker-and-new-de-esser-for-speech/34283" },
+    ]},
+  ]},
+];
+
+function esc(s){ return String(s).replace(/"/g,'&quot;'); }
+
+function renderKeys(variants){
+  return variants.map(function(combo){
+    return '<span class="combo">' + combo.map(function(k){ return '<span class="key">' + k + '</span>'; }).join('<span class="plus">+</span>') + '</span>';
+  }).join('<span class="or">or</span>');
+}
+
+function renderItem(item){
+  if(item.type === "shortcut"){
+    var searchText = (item.label + " " + item.variants.flat().join(" ")).toLowerCase();
+    var copyText = item.variants[0].join("+");
+    var ariaCombo = item.variants.map(function(c){ return c.join(" + "); }).join(" or ");
+    return '<div class="item item--shortcut" tabindex="0" role="button" ' +
+      'aria-label="Copy shortcut for ' + esc(item.label) + ': ' + esc(ariaCombo) + '" ' +
+      'data-search="' + esc(searchText) + '" data-copy="' + esc(copyText) + '">' +
+      '<span class="item-label">' + item.label + '</span>' +
+      '<span class="item-combo-wrap">' + renderKeys(item.variants) + '<span class="copied-flag" aria-hidden="true">Copied</span></span>' +
+      '</div>';
+  }
+  if(item.type === "trick"){
+    var searchText2 = (item.label + " " + item.note).toLowerCase();
+    return '<div class="item item--trick" data-search="' + esc(searchText2) + '">' +
+      '<span class="item-label">' + item.label + '</span>' +
+      '<span class="item-note">' + item.note + '</span>' +
+      '</div>';
+  }
+  if(item.type === "link"){
+    var host = "";
+    try{ host = new URL(item.url).hostname.replace("www.",""); }catch(e){}
+    return '<div class="item item--link" data-search="' + esc(item.label.toLowerCase()) + '">' +
+      '<a class="item-link" href="' + item.url + '" target="_blank" rel="noopener">' + item.label +
+      '<span class="visually-hidden"> (opens in new tab)</span></a>' +
+      '<span class="item-domain" aria-hidden="true">' + host + '</span>' +
+      '</div>';
+  }
+  return '';
+}
+
+function renderSection(section){
+  return '<div class="section">' +
+    (section.name ? '<h3 class="section-name">' + section.name + '</h3>' : '') +
+    '<div class="items">' + section.items.map(renderItem).join('') + '</div>' +
+    '</div>';
+}
+
+function renderTool(tool){
+  var t = esc(tool.tool);
+  return '<article class="tool-card" data-tool="' + t + '">' +
+    '<div class="tool-card-head">' +
+      '<h2 class="tool-name">' + tool.tool + '</h2>' +
+      '<div class="tool-controls">' +
+        '<button type="button" class="ctrl-btn" data-move="up" aria-label="Move ' + t + ' card up">&#9650;</button>' +
+        '<button type="button" class="ctrl-btn" data-move="down" aria-label="Move ' + t + ' card down">&#9660;</button>' +
+        '<span class="drag-handle" draggable="true" aria-hidden="true" title="Drag to reorder">&#8942;&#8942;</span>' +
+      '</div>' +
+    '</div>' +
+    tool.sections.map(renderSection).join('') +
+    '</article>';
+}
+
+var app = document.getElementById('app');
+app.innerHTML = DATA.map(renderTool).join('');
+
+var live = document.getElementById('live-status');
+function announce(msg){ live.textContent = msg; }
+
+var totalCount = 0;
+DATA.forEach(function(t){ t.sections.forEach(function(s){ totalCount += s.items.length; }); });
+var totalTools = DATA.length;
+var statsEl = document.getElementById('stats');
+function setStats(visible){
+  if(visible === undefined || visible === totalCount){
+    statsEl.textContent = totalCount + ' entries · ' + totalTools + ' tools';
+  } else {
+    statsEl.textContent = 'showing ' + visible + ' of ' + totalCount;
+  }
+}
+setStats();
+
+// ---- Copy to clipboard ----
+function copyText(text){
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+function triggerCopy(row){
+  var text = row.getAttribute('data-copy');
+  copyText(text);
+  row.classList.add('copied');
+  setTimeout(function(){ row.classList.remove('copied'); }, 900);
+  announce('Copied ' + text.split('+').join(' + ') + ' to clipboard.');
+}
+
+// ---- Search / filter ----
+var searchEl = document.getElementById('search');
+function applyFilter(){
+  var q = searchEl.value.trim().toLowerCase();
+  var visibleCount = 0;
+  document.querySelectorAll('.tool-card').forEach(function(card){
+    var cardHasVisible = false;
+    card.querySelectorAll('.section').forEach(function(sec){
+      var secHasVisible = false;
+      sec.querySelectorAll('.item').forEach(function(item){
+        var match = !q || (item.getAttribute('data-search') || '').indexOf(q) !== -1;
+        item.classList.toggle('is-hidden', !match);
+        if(match){ secHasVisible = true; visibleCount++; }
+      });
+      sec.classList.toggle('is-hidden', !secHasVisible);
+      if(secHasVisible) cardHasVisible = true;
+    });
+    card.classList.toggle('is-hidden', !cardHasVisible);
+  });
+  setStats(q ? visibleCount : undefined);
+}
+searchEl.addEventListener('input', applyFilter);
+
+document.addEventListener('keydown', function(e){
+  if(e.key === '/' && document.activeElement !== searchEl){
+    e.preventDefault();
+    searchEl.focus();
+  } else if(e.key === 'Escape'){
+    searchEl.value = '';
+    searchEl.blur();
+    applyFilter();
+  }
+});
+
+// ---- Reordering: buttons (keyboard/touch/mouse) + drag handle (mouse enhancement) ----
+var ORDER_KEY = 'shortcuts-card-order';
+
+function getStoredOrder(){
+  try{
+    var raw = localStorage.getItem(ORDER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function saveOrder(){
+  try{
+    var order = Array.prototype.map.call(document.querySelectorAll('.tool-card'), function(c){ return c.getAttribute('data-tool'); });
+    localStorage.setItem(ORDER_KEY, JSON.stringify(order));
+  }catch(e){ /* storage unavailable this session — reordering still works, just won't persist */ }
+}
+function applyStoredOrder(){
+  var saved = getStoredOrder();
+  if(!saved) return;
+  var cards = {};
+  document.querySelectorAll('.tool-card').forEach(function(c){ cards[c.getAttribute('data-tool')] = c; });
+  saved.forEach(function(name){ if(cards[name]) app.appendChild(cards[name]); });
+  document.querySelectorAll('.tool-card').forEach(function(c){
+    if(saved.indexOf(c.getAttribute('data-tool')) === -1) app.appendChild(c);
+  });
+}
+function updateMoveButtonStates(){
+  var cards = document.querySelectorAll('.tool-card');
+  cards.forEach(function(card, i){
+    card.querySelector('[data-move="up"]').disabled = (i === 0);
+    card.querySelector('[data-move="down"]').disabled = (i === cards.length - 1);
+  });
+}
+function moveCard(card, direction){
+  var sibling = direction === 'up' ? card.previousElementSibling : card.nextElementSibling;
+  if(!sibling) return;
+  if(direction === 'up'){ app.insertBefore(card, sibling); }
+  else{ app.insertBefore(sibling, card); }
+  saveOrder();
+  updateMoveButtonStates();
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.tool-card'));
+  announce(card.getAttribute('data-tool') + ' moved ' + direction + ', now position ' + (cards.indexOf(card)+1) + ' of ' + cards.length + '.');
+}
+
+applyStoredOrder();
+updateMoveButtonStates();
+
+app.addEventListener('click', function(e){
+  var moveBtn = e.target.closest('[data-move]');
+  if(moveBtn){
+    moveCard(moveBtn.closest('.tool-card'), moveBtn.getAttribute('data-move'));
+    return;
+  }
+  var row = e.target.closest('.item--shortcut');
+  if(row){ triggerCopy(row); }
+});
+
+app.addEventListener('keydown', function(e){
+  if((e.key === 'Enter' || e.key === ' ') && e.target.closest('.item--shortcut')){
+    e.preventDefault();
+    triggerCopy(e.target.closest('.item--shortcut'));
+  }
+});
+
+// Drag-and-drop: only the small handle is draggable, so it never fights with
+// text selection or clicking elsewhere in the card. Buttons above are the
+// full keyboard/touch-accessible equivalent (WCAG 2.2, 2.5.7).
+var draggedCard = null;
+
+app.addEventListener('dragstart', function(e){
+  var handle = e.target.closest('.drag-handle');
+  if(!handle) return;
+  var card = handle.closest('.tool-card');
+  draggedCard = card;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', card.getAttribute('data-tool'));
+  try{ e.dataTransfer.setDragImage(card, 20, 20); }catch(err){}
+  card.classList.add('dragging');
+});
+
+app.addEventListener('dragover', function(e){
+  if(!draggedCard) return;
+  var target = e.target.closest('.tool-card');
+  if(!target || target === draggedCard) return;
+  e.preventDefault();
+  var rect = target.getBoundingClientRect();
+  var before = (e.clientY - rect.top) < (rect.height / 2);
+  app.insertBefore(draggedCard, before ? target : target.nextElementSibling);
+});
+
+app.addEventListener('drop', function(e){ e.preventDefault(); });
+
+app.addEventListener('dragend', function(){
+  if(draggedCard){
+    draggedCard.classList.remove('dragging');
+    saveOrder();
+    updateMoveButtonStates();
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.tool-card'));
+    announce(draggedCard.getAttribute('data-tool') + ' moved, now position ' + (cards.indexOf(draggedCard)+1) + ' of ' + cards.length + '.');
+  }
+  draggedCard = null;
+});
+</script>
+</body>
+</html>
