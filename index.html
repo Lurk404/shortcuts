@@ -207,7 +207,6 @@ const DATA = [
     { name: "Tabs", items: [
       { type:"shortcut", label:"Cycle tabs", variants:[["Ctrl","Tab"]] },
       { type:"shortcut", label:"Show all open tabs", variants:[["Ctrl","Shift","Tab"]] },
-      { type:"shortcut", label:"Mute tab", variants:[["Ctrl","m"]] },
     ]},
     { name: "Reader view", items: [
       { type:"shortcut", label:"Open Reader view", variants:[["Cmd","Opt","R"],["F9"]] },
@@ -218,6 +217,9 @@ const DATA = [
     ]},
     { name: "Screenshot", items: [
       { type:"shortcut", label:"Screenshot", variants:[["Ctrl","Shift","S"],["Cmd","Shift","S"]] },
+    ]},
+        { name: "Search", items: [
+      { type:"shortcut", label:"Quick Find", variants:[["/"]] },
     ]},
   ]},
   { tool: "macOS", sections: [
@@ -264,12 +266,6 @@ const DATA = [
       { type:"shortcut", label:"Open DevTools", variants:[["Ctrl","Shift","I"],["Cmd","Opt","I"]] },
     ]},
   ]},
-  { tool: "ShareX", sections: [
-    { name: null, items: [
-      { type:"shortcut", label:"Capture last region", variants:[["Ctrl","Alt","Print Screen"]] },
-      { type:"shortcut", label:"End GIF recording", variants:[["Shift","Print Screen"]] },
-    ]},
-  ]},
   { tool: "Word", sections: [
     { name: null, items: [
       { type:"trick", label:"Jump to the Navigation pane", note:"Click the current page number in the status bar." },
@@ -295,7 +291,18 @@ const DATA = [
       { type:"link", label:"De-clicker / de-esser plugins for speech", url:"https://forum.audacityteam.org/t/updated-de-clicker-and-new-de-esser-for-speech/34283" },
     ]},
   ]},
+  { tool: "ShareX", sections: [
+    { name: null, items: [
+      { type:"shortcut", label:"Capture last region", variants:[["Ctrl","Alt","Print Screen"]] },
+      { type:"shortcut", label:"End GIF recording", variants:[["Shift","Print Screen"]] },
+    ]},
+  ]},
 ];
+
+// The order tool cards appear in by default. Just reorder these names —
+// no need to touch the DATA blocks above. Anything you drag/reorder in the
+// page itself is saved separately in your browser and takes priority over this.
+const DEFAULT_ORDER = ["Firefox","Word","macOS","Chrome / Edge","Windows","Excel","ShareX","Audacity"];
 
 function esc(s){ return String(s).replace(/"/g,'&quot;'); }
 
@@ -445,14 +452,13 @@ function saveOrder(){
     localStorage.setItem(ORDER_KEY, JSON.stringify(order));
   }catch(e){ /* storage unavailable this session — reordering still works, just won't persist */ }
 }
-function applyStoredOrder(){
-  var saved = getStoredOrder();
-  if(!saved) return;
+function applyOrder(order){
+  if(!order) return;
   var cards = {};
   document.querySelectorAll('.tool-card').forEach(function(c){ cards[c.getAttribute('data-tool')] = c; });
-  saved.forEach(function(name){ if(cards[name]) app.appendChild(cards[name]); });
+  order.forEach(function(name){ if(cards[name]) app.appendChild(cards[name]); });
   document.querySelectorAll('.tool-card').forEach(function(c){
-    if(saved.indexOf(c.getAttribute('data-tool')) === -1) app.appendChild(c);
+    if(order.indexOf(c.getAttribute('data-tool')) === -1) app.appendChild(c);
   });
 }
 function updateMoveButtonStates(){
@@ -473,7 +479,8 @@ function moveCard(card, direction){
   announce(card.getAttribute('data-tool') + ' moved ' + direction + ', now position ' + (cards.indexOf(card)+1) + ' of ' + cards.length + '.');
 }
 
-applyStoredOrder();
+applyOrder(DEFAULT_ORDER);
+applyOrder(getStoredOrder());
 updateMoveButtonStates();
 
 app.addEventListener('click', function(e){
