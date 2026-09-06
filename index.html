@@ -234,7 +234,7 @@ const DATA = [
   { tool: "macOS", sections: [
     { name: "System", items: [
       { type:"shortcut", label:"Show desktop", variants:[["Cmd","F3"]] },
-      { type:"shortcut", label:"Search clipboard", variants:[["Cmd","Space"],["Cmd","4"]] },
+      { type:"shortcut", label:"Search clipboard", variants:[["Cmd","Space"] then ["Cmd","4"]] },
       { type:"shortcut", label:"Cycle application windows", variants:[["Cmd","`"]] },
     ]},
     { name: "Finder", items: [
@@ -304,7 +304,7 @@ const DATA = [
 // The order tool cards appear in by default. Just reorder these names —
 // no need to touch the DATA blocks above. Anything you drag/reorder in the
 // page itself is saved separately in your browser and takes priority over this.
-const DEFAULT_ORDER = ["Firefox","Word","macOS","Chrome / Edge","Windows","Excel","Audacity","ShareX"];
+const DEFAULT_ORDER = ["Firefox","macOS","Windows","Chrome / Edge","Word","Excel","Audacity","ShareX"];
 
 function esc(s){ return String(s).replace(/"/g,'&quot;'); }
 
@@ -314,9 +314,10 @@ function renderKeys(variants){
   }).join('<span class="or">or</span>');
 }
 
-function renderItem(item){
+function renderItem(item, toolName, sectionName){
+  var context = (toolName + " " + (sectionName || "")).toLowerCase();
   if(item.type === "shortcut"){
-    var searchText = (item.label + " " + item.variants.flat().join(" ")).toLowerCase();
+    var searchText = (context + " " + item.label + " " + item.variants.flat().join(" ")).toLowerCase();
     var copyText = item.variants[0].join("+");
     var ariaCombo = item.variants.map(function(c){ return c.join(" + "); }).join(" or ");
     return '<div class="item item--shortcut" tabindex="0" role="button" ' +
@@ -327,7 +328,7 @@ function renderItem(item){
       '</div>';
   }
   if(item.type === "trick"){
-    var searchText2 = (item.label + " " + item.note).toLowerCase();
+    var searchText2 = (context + " " + item.label + " " + item.note).toLowerCase();
     return '<div class="item item--trick" data-search="' + esc(searchText2) + '">' +
       '<span class="item-label">' + item.label + '</span>' +
       '<span class="item-note">' + item.note + '</span>' +
@@ -336,7 +337,8 @@ function renderItem(item){
   if(item.type === "link"){
     var host = "";
     try{ host = new URL(item.url).hostname.replace("www.",""); }catch(e){}
-    return '<div class="item item--link" data-search="' + esc(item.label.toLowerCase()) + '">' +
+    var searchText3 = (context + " " + item.label).toLowerCase();
+    return '<div class="item item--link" data-search="' + esc(searchText3) + '">' +
       '<a class="item-link" href="' + item.url + '" target="_blank" rel="noopener">' + item.label +
       '<span class="visually-hidden"> (opens in new tab)</span></a>' +
       '<span class="item-domain" aria-hidden="true">' + host + '</span>' +
@@ -345,10 +347,10 @@ function renderItem(item){
   return '';
 }
 
-function renderSection(section){
+function renderSection(section, toolName){
   return '<div class="section">' +
     (section.name ? '<h3 class="section-name">' + section.name + '</h3>' : '') +
-    '<div class="items">' + section.items.map(renderItem).join('') + '</div>' +
+    '<div class="items">' + section.items.map(function(item){ return renderItem(item, toolName, section.name); }).join('') + '</div>' +
     '</div>';
 }
 
@@ -363,7 +365,7 @@ function renderTool(tool){
         '<span class="drag-handle" draggable="true" aria-hidden="true" title="Drag to reorder">&#8942;&#8942;</span>' +
       '</div>' +
     '</div>' +
-    tool.sections.map(renderSection).join('') +
+    tool.sections.map(function(section){ return renderSection(section, tool.tool); }).join('') +
     '</article>';
 }
 
