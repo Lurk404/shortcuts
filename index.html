@@ -59,6 +59,12 @@
     font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:var(--accent);
     white-space:nowrap; padding-bottom:2px;
   }
+  .platform-toggle{
+    display:block; margin-top:4px; background:none; border:none; padding:0;
+    font-size:0.76rem; color:var(--text-dim); text-decoration:underline;
+    text-decoration-color:var(--line); cursor:pointer; text-align:right;
+  }
+  .platform-toggle:hover{color:var(--accent); text-decoration-color:var(--accent-dim);}
   .search-wrap{max-width:1180px; margin:16px auto 0;}
   #search{
     width:100%; padding:11px 14px;
@@ -186,7 +192,10 @@
       <h1>Shortcuts</h1>
       <p class="subtitle">A running reference across every tool — search, or click a shortcut to copy it.</p>
     </div>
-    <div class="stats" id="stats"></div>
+    <div>
+      <div class="stats" id="stats"></div>
+      <button type="button" id="platform-toggle" class="platform-toggle" hidden></button>
+    </div>
   </div>
   <div class="search-wrap">
     <label for="search" class="visually-hidden">Search shortcuts</label>
@@ -199,7 +208,7 @@
 <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
 
 <footer class="page-footer">
-  <p>Lurk404 made this.</p>
+  <p>Data lives in the <code>DATA</code> array near the bottom of this file — add a tool, section, or shortcut there and refresh. No build step, no dependencies beyond the two Google Fonts. Card order is saved in this browser only.</p>
 </footer>
 
 <script>
@@ -308,6 +317,36 @@ const DEFAULT_ORDER = ["Firefox","macOS","Windows","Chrome / Edge","Word","Excel
 
 function esc(s){ return String(s).replace(/"/g,'&quot;'); }
 
+// ---- Platform detection ----
+// Tool cards that only make sense on one platform (Cmd doesn't exist on
+// Windows, Win-key shortcuts don't exist on Mac).
+var PLATFORM_EXCLUSIVE_TOOLS = { "macOS":"mac", "Windows":"windows" };
+
+function detectPlatform(){
+  var ua = navigator.userAgent || '';
+  // Phones/tablets: leave everything as-is, no filtering.
+  if(/iPhone|iPod|Android/.test(ua)) return 'other';
+  // iPadOS Safari reports itself as "Macintosh" — catch it via touch support
+  // so an iPad doesn't get treated as a Mac desktop.
+  if(/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'other';
+  if(/Mac/.test(ua)) return 'mac';
+  if(/Win/.test(ua)) return 'windows';
+  return 'other';
+}
+
+// For a shortcut with multiple "or" variants, pick just the one matching
+// the given mode ('mac' or 'windows'). Sequential (join:"then") shortcuts
+// and single-variant shortcuts are never collapsed. Falls back to showing
+// everything if the match isn't unambiguous, so nothing ever disappears.
+function pickVariants(item, mode){
+  if(mode === 'all' || item.join || item.variants.length < 2) return item.variants;
+  var matches = item.variants.filter(function(combo){
+    var hasCmd = combo.indexOf("Cmd") !== -1;
+    return mode === 'mac' ? hasCmd : !hasCmd;
+  });
+  return matches.length === 1 ? matches : item.variants;
+}
+
 function renderKeys(variants, joinWord){
   var word = joinWord || "or";
   return variants.map(function(combo){
@@ -315,18 +354,19 @@ function renderKeys(variants, joinWord){
   }).join('<span class="or">' + word + '</span>');
 }
 
-function renderItem(item, toolName, sectionName){
+function renderItem(item, toolName, sectionName, mode){
   var context = (toolName + " " + (sectionName || "")).toLowerCase();
   if(item.type === "shortcut"){
     var joinWord = item.join || "or";
-    var searchText = (context + " " + item.label + " " + item.variants.flat().join(" ")).toLowerCase();
-    var copyText = item.variants[0].join("+");
-    var ariaCombo = item.variants.map(function(c){ return c.join(" + "); }).join(" " + joinWord + " ");
+    var shown = pickVariants(item, mode);
+    var searchText = (context + " " + item.label + " " + shown.flat().join(" ")).toLowerCase();
+    var copyText = shown[0].join("+");
+    var ariaCombo = shown.map(function(c){ return c.join(" + "); }).join(" " + joinWord + " ");
     return '<div class="item item--shortcut" tabindex="0" role="button" ' +
       'aria-label="Copy shortcut for ' + esc(item.label) + ': ' + esc(ariaCombo) + '" ' +
       'data-search="' + esc(searchText) + '" data-copy="' + esc(copyText) + '">' +
       '<span class="item-label">' + item.label + '</span>' +
-      '<span class="item-combo-wrap">' + renderKeys(item.variants, joinWord) + '<span class="copied-flag" aria-hidden="true">Copied</span></span>' +
+      '<span class="item-combo-wrap">' + renderKeys(shown, shown.length > 1 ? joinWord : undefined) + '<span class="copied-flag" aria-hidden="true">Copied</span></span>' +
       '</div>';
   }
   if(item.type === "trick"){
@@ -349,14 +389,14 @@ function renderItem(item, toolName, sectionName){
   return '';
 }
 
-function renderSection(section, toolName){
+function renderSection(section, toolName, mode){
   return '<div class="section">' +
     (section.name ? '<h3 class="section-name">' + section.name + '</h3>' : '') +
-    '<div class="items">' + section.items.map(function(item){ return renderItem(item, toolName, section.name); }).join('') + '</div>' +
+    '<div class="items">' + section.items.map(function(item){ return renderItem(item, toolName, section.name, mode); }).join('') + '</div>' +
     '</div>';
 }
 
-function renderTool(tool){
+function renderTool(tool, mode){
   var t = esc(tool.tool);
   return '<article class="tool-card" data-tool="' + t + '">' +
     '<div class="tool-card-head">' +
@@ -367,20 +407,16 @@ function renderTool(tool){
         '<span class="drag-handle" draggable="true" aria-hidden="true" title="Drag to reorder">&#8942;&#8942;</span>' +
       '</div>' +
     '</div>' +
-    tool.sections.map(function(section){ return renderSection(section, tool.tool); }).join('') +
+    tool.sections.map(function(section){ return renderSection(section, tool.tool, mode); }).join('') +
     '</article>';
 }
 
 var app = document.getElementById('app');
-app.innerHTML = DATA.map(renderTool).join('');
-
 var live = document.getElementById('live-status');
 function announce(msg){ live.textContent = msg; }
 
-var totalCount = 0;
-DATA.forEach(function(t){ t.sections.forEach(function(s){ totalCount += s.items.length; }); });
-var totalTools = DATA.length;
 var statsEl = document.getElementById('stats');
+var totalCount = 0, totalTools = 0;
 function setStats(visible){
   if(visible === undefined || visible === totalCount){
     statsEl.textContent = totalCount + ' entries · ' + totalTools + ' tools';
@@ -388,7 +424,6 @@ function setStats(visible){
     statsEl.textContent = 'showing ' + visible + ' of ' + totalCount;
   }
 }
-setStats();
 
 // ---- Copy to clipboard ----
 function copyText(text){
@@ -485,9 +520,52 @@ function moveCard(card, direction){
   announce(card.getAttribute('data-tool') + ' moved ' + direction + ', now position ' + (cards.indexOf(card)+1) + ' of ' + cards.length + '.');
 }
 
-applyOrder(DEFAULT_ORDER);
-applyOrder(getStoredOrder());
-updateMoveButtonStates();
+// ---- Platform filtering: state + toggle ----
+var detectedPlatform = detectPlatform(); // 'mac' | 'windows' | 'other'
+var PLATFORM_MODE_KEY = 'shortcuts-platform-showall';
+function getShowAll(){
+  try{ return localStorage.getItem(PLATFORM_MODE_KEY) === '1'; }catch(e){ return false; }
+}
+function setShowAll(val){
+  try{ localStorage.setItem(PLATFORM_MODE_KEY, val ? '1' : '0'); }catch(e){}
+}
+function currentMode(){
+  if(detectedPlatform === 'other') return 'all';
+  return getShowAll() ? 'all' : detectedPlatform;
+}
+
+var platformToggle = document.getElementById('platform-toggle');
+var PLATFORM_LABEL = { mac: 'macOS', windows: 'Windows' };
+function updatePlatformToggle(mode){
+  if(detectedPlatform === 'other'){ platformToggle.hidden = true; return; }
+  platformToggle.hidden = false;
+  platformToggle.textContent = mode === 'all'
+    ? 'Showing all shortcuts — show ' + PLATFORM_LABEL[detectedPlatform] + ' only'
+    : 'Showing ' + PLATFORM_LABEL[detectedPlatform] + ' shortcuts — show all';
+}
+platformToggle.addEventListener('click', function(){
+  setShowAll(!getShowAll());
+  renderAll();
+});
+
+function renderAll(){
+  var mode = currentMode();
+  var visibleData = mode === 'all' ? DATA : DATA.filter(function(tool){
+    var excl = PLATFORM_EXCLUSIVE_TOOLS[tool.tool];
+    return !excl || excl === mode;
+  });
+  totalCount = 0;
+  visibleData.forEach(function(t){ t.sections.forEach(function(s){ totalCount += s.items.length; }); });
+  totalTools = visibleData.length;
+  app.innerHTML = visibleData.map(function(tool){ return renderTool(tool, mode); }).join('');
+  applyOrder(DEFAULT_ORDER);
+  applyOrder(getStoredOrder());
+  updateMoveButtonStates();
+  updatePlatformToggle(mode);
+  applyFilter();
+}
+
+renderAll();
 
 app.addEventListener('click', function(e){
   var moveBtn = e.target.closest('[data-move]');
