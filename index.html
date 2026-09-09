@@ -215,10 +215,10 @@
 const DATA = [
   { tool: "Firefox", sections: [
     { name: "Tabs", items: [
-            { type:"shortcut", label:"Search tabs", variants:[["Cmd","l"],["@tabs"]], join:"then" },
+            { type:"shortcut", label:"Search tabs", variants:[["Cmd","L"],["@tabs"]], join:"then" },
       { type:"shortcut", label:"Cycle tabs", variants:[["Ctrl","Tab"]] },
       { type:"shortcut", label:"Show all open tabs", variants:[["Ctrl","Shift","Tab"]] },
-            { type:"shortcut", label:"Mute tab", variants:[["Ctrl","m"]] },
+            { type:"shortcut", label:"Mute tab", variants:[["Ctrl","M"]] },
     ]},
     { name: "Reader view", items: [
       { type:"shortcut", label:"Open Reader view", variants:[["Cmd","Opt","R"],["F9"]] },
@@ -237,7 +237,7 @@ const DATA = [
     { tool: "Chrome / Edge", sections: [
     { name: null, items: [
       { type:"shortcut", label:"Cycle tabs", variants:[["Ctrl","Tab"],["Ctrl","Shift","Tab"]] },
-      { type:"shortcut", label:"Search tabs", variants:[["Ctrl","Shift","A"],["Cmd","Shift","A"]] },
+      { type:"shortcut", label:"Search open tabs", variants:[["Ctrl","Shift","A"],["Cmd","Shift","A"]] },
       { type:"shortcut", label:"Open DevTools", variants:[["Ctrl","Shift","I"],["Cmd","Opt","I"]] },
     ]},
   ]},
