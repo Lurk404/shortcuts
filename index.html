@@ -220,18 +220,18 @@ const DATA = [
       { type:"shortcut", label:"Show all open tabs", variants:[["Ctrl","Shift","Tab"]] },
             { type:"shortcut", label:"Mute tab", variants:[["Ctrl","M"]] },
     ]},
-    { name: "Reader view", items: [
-      { type:"shortcut", label:"Open Reader view", variants:[["Cmd","Opt","R"],["F9"]] },
-      { type:"trick", label:"Force Reader view on any page", note:"Paste about:reader?url= in front of the page's URL." },
-    ]},
-    { name: "Address bar", items: [
+        { name: "Address bar", items: [
       { type:"trick", label:"Search operators", note:"Type @bookmarks, @tabs, @history, or @actions to search just that category." },
+    ]},
+            { name: "Search", items: [
+      { type:"shortcut", label:"Quick Find", variants:[["/"]] },
     ]},
     { name: "Screenshot", items: [
       { type:"shortcut", label:"Screenshot", variants:[["Ctrl","Shift","S"],["Cmd","Shift","S"]] },
     ]},
-        { name: "Search", items: [
-      { type:"shortcut", label:"Quick Find", variants:[["/"]] },
+        { name: "Reader view", items: [
+      { type:"shortcut", label:"Open Reader view", variants:[["Cmd","Opt","R"],["F9"]] },
+      { type:"trick", label:"Force Reader view on any page", note:"Paste about:reader?url= in front of the page's URL." },
     ]},
   ]},
     { tool: "Chrome / Edge", sections: [
