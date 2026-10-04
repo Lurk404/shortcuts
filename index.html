@@ -488,6 +488,8 @@ const DATA = [
       { type:"command", label:"Prevent sleep for time in seconds", cmd:"caffeinate -u -t 3600", platform:"mac" },
       { type:"command", label:"Keep the display on", cmd:"caffeinate -d", platform:"mac" },
       { type:"command", label:"Show all power management settings", cmd:"sudo pmset -g", platform:"mac" },
+      { type:"command", label:"View current schedule", cmd:"pmset -g sched", platform:"mac" },
+      { type:"command", label:"Cancel current schedule", cmd:"sudo pmset repeat cancel", platform:"mac" },
     ]},
     { name: "Dock", items: [
       { type:"command", label:"Lock the Dock size", cmd:"defaults write com.apple.Dock size-immutable -bool true && killall Dock", platform:"mac" },
