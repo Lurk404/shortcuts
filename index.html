@@ -32,6 +32,7 @@
     -webkit-font-smoothing:antialiased;
   }
   a{color:inherit;}
+  [hidden]{display:none !important;}
   :focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
   .visually-hidden{
     position:absolute; width:1px; height:1px; padding:0; margin:-1px;
@@ -120,7 +121,7 @@
   .section:last-child{margin-bottom:0;}
   .section.is-hidden{display:none;}
   .section-name{
-    font-size:0.95rem; font-weight:600; color:var(--text-dim);
+    font-size:1.02rem; font-weight:600; color:var(--text);
     margin:0 0 8px;
   }
 
@@ -131,11 +132,24 @@
   .items .item:last-child{border-bottom:none;}
   .item.is-hidden{display:none;}
 
-  .item--shortcut{cursor:pointer;}
+  .item--shortcut, .item--command{cursor:pointer;}
   .item--shortcut:hover,
-  .item--shortcut:focus-visible{
+  .item--shortcut:focus-visible,
+  .item--command:hover,
+  .item--command:focus-visible{
     background:rgba(217,164,65,0.08); margin:0 -8px; padding:7px 8px; border-radius:4px;
   }
+
+  /* Terminal commands: same monospace as the keycaps, no box. Stacked under
+     the label so long commands wrap instead of overflowing the card. */
+  .item--command{flex-direction:column; align-items:flex-start; gap:2px;}
+  .cmd-wrap{position:relative; max-width:100%; min-width:0;}
+  .cmd{
+    font-family:'JetBrains Mono',monospace; font-size:0.8rem; font-weight:500;
+    color:var(--text); white-space:pre-wrap; overflow-wrap:anywhere;
+  }
+  .item--command .copied-flag{left:0; right:auto;}
+  .item.copied .cmd{opacity:0;}
 
   .item-label{font-size:0.9rem; min-width:0;}
   .item-combo-wrap{
@@ -174,6 +188,46 @@
   .item--link .item-link:hover{color:var(--accent);}
   .item-domain{font-size:0.76rem; color:var(--text-dim);}
 
+  /* ---- Entry generator (bottom of page) ---- */
+  .gen{max-width:1180px; margin:0 auto 28px; padding:0 28px;}
+  .gen details{background:var(--bg-card); border:1px solid var(--line); border-radius:6px;}
+  .gen summary{padding:13px 18px; cursor:pointer; font-weight:600; font-size:0.95rem;}
+  .gen-body{padding:4px 18px 20px;}
+  .gen-intro{margin:0 0 14px; color:var(--text-dim); font-size:0.88rem; max-width:70ch;}
+  .gen-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px 16px;}
+  @media (max-width:640px){ .gen-grid{grid-template-columns:1fr;} .gen{padding:0 16px;} }
+  .gen-wide{grid-column:1 / -1;}
+  .gen-field label, .gen-out-title{display:block; margin-bottom:5px; font-size:0.85rem; font-weight:500;}
+  .gen-opt{color:var(--text-dim); font-weight:400;}
+  .gen-field input[type="text"], .gen-field select{
+    width:100%; padding:9px 12px; min-height:38px;
+    background:var(--bg); color:var(--text);
+    border:1px solid var(--text-dim); border-radius:6px;
+    font-family:'Inter',sans-serif; font-size:0.92rem;
+  }
+  .gen-field input::placeholder{color:var(--text-dim);}
+  .gen-field input[type="text"]:focus, .gen-field select:focus{border-color:var(--accent);}
+  .gen-mono{font-family:'JetBrains Mono',monospace !important; font-size:0.85rem !important;}
+  .gen-help{margin:5px 0 0; color:var(--text-dim); font-size:0.78rem;}
+  .gen-check{display:flex; gap:8px; align-items:flex-start; font-size:0.88rem; cursor:pointer;}
+  .gen-check input{margin-top:3px; accent-color:var(--accent); width:16px; height:16px; flex-shrink:0;}
+  .gen-out{margin-top:20px;}
+  .gen-out-head{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:6px;}
+  .gen-out-head .gen-out-title{margin:0;}
+  .gen-btn{
+    background:var(--bg-key); color:var(--text); border:1px solid var(--text-dim); border-radius:4px;
+    padding:6px 14px; min-height:32px; font-family:'Inter',sans-serif; font-size:0.85rem; cursor:pointer;
+  }
+  .gen-btn:hover:not(:disabled){border-color:var(--accent); color:var(--accent);}
+  .gen-btn:disabled{opacity:0.45; cursor:default;}
+  .gen-pre{
+    margin:0; padding:12px 14px; background:var(--bg); border:1px solid var(--line); border-radius:6px;
+    font-family:'JetBrains Mono',monospace; font-size:0.8rem; line-height:1.55; color:var(--text);
+    overflow-x:auto; white-space:pre;
+  }
+  .gen-where{margin:10px 0 0; font-size:0.88rem;}
+  .gen-hint{margin:6px 0 0; color:var(--text-dim); font-size:0.82rem;}
+
   .page-footer{
     max-width:1180px; margin:0 auto; padding:0 28px 40px;
     color:var(--text-dim); font-size:0.82rem;
@@ -207,11 +261,100 @@
 
 <div id="live-status" class="visually-hidden" role="status" aria-live="polite"></div>
 
+<section class="gen" aria-label="Entry generator">
+  <details id="gen-details">
+    <summary>Add an entry: generate code to paste</summary>
+    <div class="gen-body">
+      <p class="gen-intro">Fill this in and copy the code it produces into <code>index.html</code>. It doesn't change the page itself, and nothing here is saved.</p>
+      <div class="gen-grid">
+        <div class="gen-field">
+          <label for="gen-type">Type</label>
+          <select id="gen-type">
+            <option value="shortcut">Shortcut (key combo)</option>
+            <option value="command">Command (terminal)</option>
+            <option value="trick">Trick (tip, no keys)</option>
+            <option value="link">Link</option>
+          </select>
+        </div>
+        <div class="gen-field">
+          <label for="gen-os">Operating system</label>
+          <select id="gen-os">
+            <option value="">Any (show on every device)</option>
+            <option value="mac">macOS only</option>
+            <option value="windows">Windows only</option>
+            <option value="both">Different keys on Mac and Windows</option>
+          </select>
+        </div>
+        <div class="gen-field">
+          <label for="gen-tool">Tool / software</label>
+          <input id="gen-tool" type="text" list="gen-tools" autocomplete="off" spellcheck="false" placeholder="e.g. Firefox">
+          <datalist id="gen-tools"></datalist>
+        </div>
+        <div class="gen-field">
+          <label for="gen-section">Section <span class="gen-opt">(optional)</span></label>
+          <input id="gen-section" type="text" list="gen-sections" autocomplete="off" spellcheck="false" placeholder="e.g. Tabs">
+          <datalist id="gen-sections"></datalist>
+        </div>
+        <div class="gen-field gen-wide">
+          <label for="gen-label">Action</label>
+          <input id="gen-label" type="text" autocomplete="off" placeholder="e.g. Cycle tabs">
+        </div>
+
+        <div class="gen-field gen-wide" id="gen-f-keys">
+          <label for="gen-keys" id="gen-keys-label">Keys</label>
+          <input id="gen-keys" type="text" class="gen-mono" autocomplete="off" spellcheck="false" aria-describedby="gen-keys-help" placeholder="Cmd+Shift+4">
+          <p class="gen-help" id="gen-keys-help">Join keys with +. Separate alternatives with | (for example <code>Cmd+Opt+R | F9</code>). Names like cmd, ctrl, option and return are tidied up for you.</p>
+        </div>
+        <div class="gen-field gen-wide" id="gen-f-keys2" hidden>
+          <label for="gen-keys2">Windows keys</label>
+          <input id="gen-keys2" type="text" class="gen-mono" autocomplete="off" spellcheck="false" placeholder="Ctrl+Shift+S">
+        </div>
+        <div class="gen-field gen-wide" id="gen-f-seq">
+          <label class="gen-check" for="gen-seq">
+            <input type="checkbox" id="gen-seq">
+            <span>Sequential steps: press the first, <em>then</em> the next (separate the steps with |)</span>
+          </label>
+        </div>
+
+        <div class="gen-field gen-wide" id="gen-f-cmd" hidden>
+          <label for="gen-cmd">Command</label>
+          <input id="gen-cmd" type="text" class="gen-mono" autocomplete="off" spellcheck="false" placeholder="git status">
+        </div>
+        <div class="gen-field gen-wide" id="gen-f-trick" hidden>
+          <label for="gen-trick">Tip</label>
+          <input id="gen-trick" type="text" autocomplete="off" placeholder="Describe the technique">
+        </div>
+        <div class="gen-field gen-wide" id="gen-f-url" hidden>
+          <label for="gen-url">Link address</label>
+          <input id="gen-url" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://...">
+        </div>
+      </div>
+
+      <div class="gen-out">
+        <div class="gen-out-head">
+          <span class="gen-out-title" id="gen-out-title">Code to paste</span>
+          <button type="button" class="gen-btn" id="gen-copy" disabled>Copy code</button>
+        </div>
+        <pre class="gen-pre" id="gen-output" tabindex="0" aria-labelledby="gen-out-title"></pre>
+        <p class="gen-where" id="gen-where"></p>
+        <p class="gen-hint" id="gen-hint"></p>
+      </div>
+    </div>
+  </details>
+</section>
+
 <footer class="page-footer">
   <p>Data lives in the <code>DATA</code> array near the bottom of this file — add a tool, section, or shortcut there and refresh. No build step, no dependencies beyond the two Google Fonts. Card order is saved in this browser only.</p>
 </footer>
 
 <script>
+// Item types (each lives inside a section's items:[ ] array):
+//   shortcut: { type:"shortcut", label:"...", variants:[["Ctrl","S"],["Cmd","S"]] }   (add join:"then" for sequences)
+//   command:  { type:"command",  label:"...", cmd:"git status" }                      (monospace text, click to copy)
+//   trick:    { type:"trick",    label:"...", note:"..." }
+//   link:     { type:"link",     label:"...", url:"https://..." }
+// Any item can also have platform:"mac" or platform:"windows" to show only on that OS (it always shows in "show all" mode).
+// Sections are { name:"...", items:[ ... ] } (name can be null); tools are { tool:"...", sections:[ ... ] }.
 const DATA = [
   { tool: "Firefox", sections: [
     { name: "Tabs", items: [
@@ -324,14 +467,48 @@ const DATA = [
       { type:"shortcut", label:"End GIF recording", variants:[["Shift","Print Screen"]] },
     ]},
   ]},
+  { tool: "Terminal", sections: [
+    { name: "System", items: [
+      { type:"command", label:"Force quit an app", cmd:"killall AppName", platform:"mac" },
+      { type:"command", label:"Erase Spotlight index and rebuild", cmd:"mdutil -E /path/to/volume", platform:"mac" },
+      { type:"command", label:"Run a shortcut", cmd:"shortcuts run 'My Shortcut'", platform:"mac" },
+    ]},
+        { name: "Time Machine", items: [
+      { type:"command", label:"Start a backup now", cmd:"sudo tmutil startbackup", platform:"mac" },
+      { type:"command", label:"List all backups", cmd:"sudo tmutil listbackups", platform:"mac" },
+      { type:"command", label:"Verify a backup", cmd:"sudo tmutil verifychecksums /path/to/backup", platform:"mac" },
+    ]},
+    { name: "Security", items: [
+      { type:"command", label:"Generate a secure password (20 characters) and copy it", cmd:"LC_ALL=C tr -dc \"[:alnum:]\" < /dev/urandom | head -c 20 | pbcopy", platform:"mac" },
+    ]},
+    { name: "Clipboard", items: [
+      { type:"command", label:"Convert clipboard to plain text", cmd:"pbpaste | textutil -convert txt -stdin -stdout -encoding 30 | pbcopy", platform:"mac" },
+    ]},
+    { name: "Power", items: [
+      { type:"command", label:"Prevent sleep for 1 hour", cmd:"caffeinate -u -t 3600", platform:"mac" },
+      { type:"command", label:"Keep the display on", cmd:"caffeinate -d", platform:"mac" },
+      { type:"command", label:"Show all power management settings", cmd:"sudo pmset -g", platform:"mac" },
+    ]},
+    { name: "Dock", items: [
+      { type:"command", label:"Lock the Dock size", cmd:"defaults write com.apple.Dock size-immutable -bool true && killall Dock", platform:"mac" },
+      { type:"command", label:"Unlock the Dock size (default)", cmd:"defaults write com.apple.Dock size-immutable -bool false && killall Dock", platform:"mac" },
+    ]},
+    { name: "Downloads", items: [
+      { type:"command", label:"Download a video", cmd:"yt-dlp 'https://www.youtube.com/watch?v=J---aiyznGQ'", platform:"mac" },
+    ]},
+  ]},
 ];
 
 // The order tool cards appear in by default. Just reorder these names —
 // no need to touch the DATA blocks above. Anything you drag/reorder in the
 // page itself is saved separately in your browser and takes priority over this.
-const DEFAULT_ORDER = ["Firefox","macOS","Windows","Chrome / Edge","Word","Excel","Audacity","ShareX"];
+const DEFAULT_ORDER = ["Firefox","macOS","Terminal","Windows","Chrome / Edge","Word","Excel","Audacity","ShareX"];
 
 function esc(s){ return String(s).replace(/"/g,'&quot;'); }
+// Full escape for command text, which can contain & < > (e.g. "a && b", "ls > out.txt").
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 // ---- Platform detection ----
 // Tool cards that only make sense on one platform (Cmd doesn't exist on
@@ -383,6 +560,15 @@ function renderItem(item, toolName, sectionName, mode){
       'data-search="' + esc(searchText) + '" data-copy="' + esc(copyText) + '">' +
       '<span class="item-label">' + item.label + '</span>' +
       '<span class="item-combo-wrap">' + renderKeys(shown, shown.length > 1 ? joinWord : undefined) + '<span class="copied-flag" aria-hidden="true">Copied</span></span>' +
+      '</div>';
+  }
+  if(item.type === "command"){
+    var searchTextC = (context + " " + item.label + " " + item.cmd).toLowerCase();
+    return '<div class="item item--command" tabindex="0" role="button" ' +
+      'aria-label="Copy command for ' + escHtml(item.label) + ': ' + escHtml(item.cmd) + '" ' +
+      'data-search="' + escHtml(searchTextC) + '" data-copy="' + escHtml(item.cmd) + '">' +
+      '<span class="item-label">' + item.label + '</span>' +
+      '<span class="cmd-wrap"><code class="cmd">' + escHtml(item.cmd) + '</code><span class="copied-flag" aria-hidden="true">Copied</span></span>' +
       '</div>';
   }
   if(item.type === "trick"){
@@ -457,7 +643,9 @@ function triggerCopy(row){
   copyText(text);
   row.classList.add('copied');
   setTimeout(function(){ row.classList.remove('copied'); }, 900);
-  announce('Copied ' + text.split('+').join(' + ') + ' to clipboard.');
+  announce(row.classList.contains('item--command')
+    ? 'Copied command: ' + text
+    : 'Copied ' + text.split('+').join(' + ') + ' to clipboard.');
 }
 
 // ---- Search / filter ----
@@ -484,7 +672,9 @@ function applyFilter(){
 searchEl.addEventListener('input', applyFilter);
 
 document.addEventListener('keydown', function(e){
-  if(e.key === '/' && document.activeElement !== searchEl){
+  var ae = document.activeElement;
+  var typing = ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable);
+  if(e.key === '/' && !typing){
     e.preventDefault();
     searchEl.focus();
   } else if(e.key === 'Escape'){
@@ -564,12 +754,24 @@ platformToggle.addEventListener('click', function(){
   renderAll();
 });
 
-function renderAll(){
-  var mode = currentMode();
-  var visibleData = mode === 'all' ? DATA : DATA.filter(function(tool){
+// Returns the data to show for a mode: drops the other platform's exclusive cards,
+// drops items marked platform:"mac"/"windows" that don't match, and prunes anything left empty.
+function dataForMode(mode){
+  if(mode === 'all') return DATA;
+  return DATA.filter(function(tool){
     var excl = PLATFORM_EXCLUSIVE_TOOLS[tool.tool];
     return !excl || excl === mode;
-  });
+  }).map(function(tool){
+    var sections = tool.sections.map(function(sec){
+      return { name: sec.name, items: sec.items.filter(function(it){ return !it.platform || it.platform === mode; }) };
+    }).filter(function(sec){ return sec.items.length > 0; });
+    return { tool: tool.tool, sections: sections };
+  }).filter(function(tool){ return tool.sections.length > 0; });
+}
+
+function renderAll(){
+  var mode = currentMode();
+  var visibleData = dataForMode(mode);
   totalCount = 0;
   visibleData.forEach(function(t){ t.sections.forEach(function(s){ totalCount += s.items.length; }); });
   totalTools = visibleData.length;
@@ -589,14 +791,14 @@ app.addEventListener('click', function(e){
     moveCard(moveBtn.closest('.tool-card'), moveBtn.getAttribute('data-move'));
     return;
   }
-  var row = e.target.closest('.item--shortcut');
+  var row = e.target.closest('.item--shortcut, .item--command');
   if(row){ triggerCopy(row); }
 });
 
 app.addEventListener('keydown', function(e){
-  if((e.key === 'Enter' || e.key === ' ') && e.target.closest('.item--shortcut')){
+  if((e.key === 'Enter' || e.key === ' ') && e.target.closest('.item--shortcut, .item--command')){
     e.preventDefault();
-    triggerCopy(e.target.closest('.item--shortcut'));
+    triggerCopy(e.target.closest('.item--shortcut, .item--command'));
   }
 });
 
@@ -638,6 +840,212 @@ app.addEventListener('dragend', function(){
   }
   draggedCard = null;
 });
+
+// ---- Entry generator: builds a snippet to paste into the DATA array ----
+(function(){
+  function $(id){ return document.getElementById(id); }
+  var typeEl = $('gen-type'), osEl = $('gen-os'), toolEl = $('gen-tool'), secEl = $('gen-section'),
+      labelEl = $('gen-label'), keysEl = $('gen-keys'), keys2El = $('gen-keys2'), seqEl = $('gen-seq'),
+      cmdEl = $('gen-cmd'), trickEl = $('gen-trick'), urlEl = $('gen-url'),
+      outEl = $('gen-output'), whereEl = $('gen-where'), hintEl = $('gen-hint'), copyBtn = $('gen-copy'),
+      keysLabel = $('gen-keys-label'), toolList = $('gen-tools'), secList = $('gen-sections'),
+      fKeys = $('gen-f-keys'), fKeys2 = $('gen-f-keys2'), fSeq = $('gen-f-seq'),
+      fCmd = $('gen-f-cmd'), fTrick = $('gen-f-trick'), fUrl = $('gen-f-url');
+  var osTouched = false;   // once you pick an OS yourself, we stop choosing a default for you
+  var toolTouched = false; // same for the tool name
+
+  // Tidy common key names into the spelling the page uses.
+  var KEY_ALIASES = {
+    'cmd':'Cmd', 'command':'Cmd', '\u2318':'Cmd',
+    'ctrl':'Ctrl', 'control':'Ctrl', '\u2303':'Ctrl',
+    'shift':'Shift', '\u21E7':'Shift',
+    'opt':'Opt', 'option':'Opt', '\u2325':'Opt',
+    'alt':'Alt',
+    'win':'Win', 'windows':'Win', 'super':'Win',
+    'enter':'Enter', 'return':'Enter',
+    'esc':'Esc', 'escape':'Esc',
+    'tab':'Tab', 'space':'Space', 'spacebar':'Space',
+    'del':'Delete', 'delete':'Delete', 'backspace':'Backspace',
+    'up':'Up', 'down':'Down', 'left':'Left', 'right':'Right',
+    'print screen':'Print Screen', 'printscreen':'Print Screen', 'prtscn':'Print Screen', 'prtsc':'Print Screen'
+  };
+  function normKey(k){
+    var t = k.trim();
+    if(!t) return '';
+    var alias = KEY_ALIASES[t.toLowerCase()];
+    if(alias) return alias;
+    if(/^[a-z]$/i.test(t)) return t.toUpperCase();      // single letters are always capitals
+    if(/^f\d{1,2}$/i.test(t)) return t.toUpperCase();   // f5 -> F5
+    return t;                                           // symbols, "@tabs", etc. stay as typed
+  }
+  function parseCombo(str){
+    var t = str.trim();
+    if(!t) return [];
+    if(t === '+') return ['+'];
+    var plusKey = false;
+    if(/\+\+$/.test(t)){ plusKey = true; t = t.slice(0, -2); }   // "Cmd++" means Cmd and the + key
+    var keys = t.split('+').map(normKey).filter(function(k){ return k; });
+    if(plusKey) keys.push('+');
+    return keys;
+  }
+  function parseVariants(str){
+    return str.split('|').map(parseCombo).filter(function(c){ return c.length > 0; });
+  }
+  function hasCmd(combo){ return combo.indexOf('Cmd') !== -1; }
+  // JSON.stringify gives correctly escaped double-quoted strings; also defuse any closing script tag.
+  function jsStr(s){ return JSON.stringify(s).replace(/<\//g, '<\\/'); }
+
+  function findTool(name){
+    var n = name.trim().toLowerCase();
+    for(var i = 0; i < DATA.length; i++){ if(DATA[i].tool.toLowerCase() === n) return DATA[i]; }
+    return null;
+  }
+  function findSection(tool, name){
+    var n = name.trim().toLowerCase();
+    for(var i = 0; i < tool.sections.length; i++){
+      if((tool.sections[i].name || '').toLowerCase() === n) return tool.sections[i];
+    }
+    return null;
+  }
+  function fillDatalists(){
+    toolList.innerHTML = DATA.map(function(t){ return '<option value="' + escHtml(t.tool) + '"></option>'; }).join('');
+    var t = findTool(toolEl.value);
+    secList.innerHTML = t
+      ? t.sections.filter(function(sec){ return sec.name; }).map(function(sec){ return '<option value="' + escHtml(sec.name) + '"></option>'; }).join('')
+      : '';
+  }
+
+  function buildItem(){
+    var type = typeEl.value, os = osEl.value, label = labelEl.value.trim();
+    var problems = [], notes = [];
+    var parts = ['type:' + jsStr(type), 'label:' + jsStr(label)];
+    if(!label) problems.push('Add an action name.');
+
+    if(type === 'shortcut'){
+      var mac = parseVariants(keysEl.value);
+      var variants = mac;
+      if(os === 'both'){
+        var win = parseVariants(keys2El.value);
+        if(!mac.length) problems.push('Add the Mac keys.');
+        if(!win.length) problems.push('Add the Windows keys.');
+        variants = mac.concat(win);
+        var withCmd = variants.filter(hasCmd).length;
+        if(variants.length && (withCmd !== 1 || variants.length - withCmd !== 1)){
+          notes.push('The page can only pick the right combo for each OS automatically when there is exactly one Mac combo (containing Cmd) and one Windows combo (without it). Otherwise every combo shows, joined by "or".');
+        }
+      } else if(!mac.length){
+        problems.push('Add the keys.');
+      }
+      parts.push('variants:' + JSON.stringify(variants));
+      if(os !== 'both' && seqEl.checked && variants.length > 1) parts.push('join:"then"');
+    } else if(type === 'command'){
+      var cmd = cmdEl.value.trim();
+      if(!cmd) problems.push('Add the command.');
+      parts.push('cmd:' + jsStr(cmd));
+    } else if(type === 'trick'){
+      var note = trickEl.value.trim();
+      if(!note) problems.push('Add the tip text.');
+      parts.push('note:' + jsStr(note));
+    } else {
+      var url = urlEl.value.trim();
+      if(!url) problems.push('Add the link address.');
+      else if(!/^https?:\/\//i.test(url)) problems.push('The link address should start with http:// or https://.');
+      parts.push('url:' + jsStr(url));
+    }
+    if(os === 'mac' || os === 'windows') parts.push('platform:' + jsStr(os));
+    return { line: '{ ' + parts.join(', ') + ' },', problems: problems, notes: notes };
+  }
+
+  function sectionBlock(name, item){
+    return '    { name: ' + (name === null ? 'null' : jsStr(name)) + ', items: [\n' + item + '\n    ]},';
+  }
+  function toolBlock(toolName, secName, item){
+    return '  { tool: ' + jsStr(toolName) + ', sections: [\n' + sectionBlock(secName, item) + '\n  ]},';
+  }
+
+  function render(){
+    var toolText = toolEl.value.trim(), secText = secEl.value.trim();
+    var r = buildItem();
+    var problems = r.problems.slice();
+    if(!toolText) problems.push('Add a tool name.');
+    var notes = r.notes.slice();
+    if(typeEl.value === 'shortcut' && osEl.value === 'both'){
+      notes.unshift('Both sets of keys are saved together; each visitor sees the one that matches their OS.');
+    }
+
+    if(problems.length){
+      outEl.textContent = 'Fill in the fields above to generate code.';
+      whereEl.textContent = '';
+      hintEl.textContent = problems.join(' ');
+      copyBtn.disabled = true;
+      return;
+    }
+
+    var tool = findTool(toolText);
+    var section = tool ? findSection(tool, secText) : null;
+    var item = '      ' + r.line;
+    var secName = section ? section.name : (secText || null);
+    var code, where;
+    if(tool && section){
+      code = item;
+      where = 'Paste this line inside the items list of ' + (section.name ? 'the "' + section.name + '" section' : 'the unnamed section') +
+        ' in the "' + tool.tool + '" tool, before that list\'s closing ]},';
+    } else if(tool){
+      code = sectionBlock(secName, item);
+      where = 'This is a new section. Paste the whole block into the sections list of the "' + tool.tool +
+        '" tool, right after another section\'s closing ]}, (not inside an items list).';
+    } else {
+      code = toolBlock(toolText, secName, item);
+      where = 'This is a new tool. Paste the whole block into const DATA = [ ... ], right after another tool\'s closing ]}, (before the final ];). ' +
+        'It appears last unless you add "' + toolText + '" to DEFAULT_ORDER.';
+    }
+    outEl.textContent = code;
+    whereEl.textContent = where;
+    hintEl.textContent = notes.join(' ');
+    copyBtn.disabled = false;
+  }
+
+  function updateUI(){
+    var type = typeEl.value;
+    osEl.querySelector('option[value="both"]').disabled = (type !== 'shortcut');
+    if(type !== 'shortcut' && osEl.value === 'both') osEl.value = '';
+    var os = osEl.value;
+    var isShortcut = (type === 'shortcut');
+    fKeys.hidden = !isShortcut;
+    fSeq.hidden = !isShortcut;
+    fKeys2.hidden = !(isShortcut && os === 'both');
+    fCmd.hidden = (type !== 'command');
+    fTrick.hidden = (type !== 'trick');
+    fUrl.hidden = (type !== 'link');
+    keysLabel.textContent = (os === 'both') ? 'Mac keys' : 'Keys';
+    if(os === 'both') seqEl.checked = false;
+    seqEl.disabled = (os === 'both');
+    fillDatalists();
+    render();
+  }
+
+  typeEl.addEventListener('change', function(){
+    var isCommand = (typeEl.value === 'command');
+    if(!osTouched) osEl.value = isCommand ? 'mac' : '';                // commands default to macOS
+    if(!toolTouched) toolEl.value = isCommand ? 'Terminal' : '';       // ...and to the Terminal tool
+    updateUI();
+  });
+  osEl.addEventListener('change', function(){ osTouched = true; updateUI(); });
+  [toolEl, secEl, labelEl, keysEl, keys2El, cmdEl, trickEl, urlEl].forEach(function(el){
+    el.addEventListener('input', function(){ if(el === toolEl){ toolTouched = true; fillDatalists(); } render(); });
+  });
+  seqEl.addEventListener('change', render);
+
+  copyBtn.addEventListener('click', function(){
+    if(copyBtn.disabled) return;
+    copyText(outEl.textContent);
+    announce('Copied code to clipboard.');
+    copyBtn.textContent = 'Copied';
+    setTimeout(function(){ copyBtn.textContent = 'Copy code'; }, 1200);
+  });
+
+  updateUI();
+})();
 </script>
 </body>
 </html>
