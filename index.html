@@ -485,7 +485,7 @@ const DATA = [
       { type:"command", label:"Convert clipboard to plain text", cmd:"pbpaste | textutil -convert txt -stdin -stdout -encoding 30 | pbcopy", platform:"mac" },
     ]},
     { name: "Power", items: [
-      { type:"command", label:"Prevent sleep for 1 hour", cmd:"caffeinate -u -t 3600", platform:"mac" },
+      { type:"command", label:"Prevent sleep for time in seconds", cmd:"caffeinate -u -t 3600", platform:"mac" },
       { type:"command", label:"Keep the display on", cmd:"caffeinate -d", platform:"mac" },
       { type:"command", label:"Show all power management settings", cmd:"sudo pmset -g", platform:"mac" },
     ]},
