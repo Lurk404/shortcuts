@@ -436,6 +436,13 @@ const DATA = [
             { type:"shortcut", label:"Snap with keyboard", variants:[["Win","arrow key"],["Up x2 for fullscreen"]], join:"then", platform:"windows" },
     ]},
   ]},
+    { tool: "Rectangle", sections: [
+    { name: null, items: [
+      { type:"shortcut", label:"Halves", variants:[["Ctrl","Opt","Arrow"]], platform:"mac" },
+            { type:"shortcut", label:"1/3", variants:[["Ctrl","Opt","D/F/G"]], platform:"mac" },
+      { type:"shortcut", label:"2/3", variants:[["Ctrl","Opt","T/E"]], platform:"mac" },
+    ]},
+  ]},
   { tool: "Excel", sections: [
     { name: "Filters", items: [
       { type:"shortcut", label:"Jump to header row", variants:[["Ctrl","Up"]] },
@@ -505,7 +512,7 @@ const DATA = [
 // The order tool cards appear in by default. Just reorder these names —
 // no need to touch the DATA blocks above. Anything you drag/reorder in the
 // page itself is saved separately in your browser and takes priority over this.
-const DEFAULT_ORDER = ["Firefox","macOS","Terminal","Windows","Chrome / Edge","Word","Excel","Audacity","ShareX"];
+const DEFAULT_ORDER = ["Firefox","macOS","Rectangle","Terminal","Windows","Chrome / Edge","Word","Excel","Audacity","ShareX"];
 
 function esc(s){ return String(s).replace(/"/g,'&quot;'); }
 // Full escape for command text, which can contain & < > (e.g. "a && b", "ls > out.txt").
