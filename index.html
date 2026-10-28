@@ -432,8 +432,11 @@ const DATA = [
       { type:"shortcut", label:"Mirror / project display", variants:[["Win","P"]] },
       { type:"shortcut", label:"Open Settings", variants:[["Win","I"]] },
       { type:"shortcut", label:"Clipboard history", variants:[["Win","V"]] },
+    ]},
+     { name: "Snap Windows", items: [
       { type:"shortcut", label:"Snap layouts", variants:[["Win","Z"]] },
-            { type:"shortcut", label:"Snap with keyboard", variants:[["Win","arrow key"],["Up x2 for fullscreen"]], join:"then", platform:"windows" },
+      { type:"shortcut", label:"Snap with keyboard", variants:[["Win","arrow key"],["Up x2 for fullscreen"]], join:"then", platform:"windows" },
+      { type:"shortcut", label:"Snap to next screen", variants:[["Win","Shift","Left/Right Arrow"]], platform:"windows" },
     ]},
   ]},
     { tool: "Rectangle", sections: [
