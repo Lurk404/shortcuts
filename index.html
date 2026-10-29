@@ -97,14 +97,15 @@
   }
   .header-top{
     display:flex; justify-content:space-between; align-items:flex-end;
-    max-width:1180px; margin:0 auto; gap:20px; flex-wrap:wrap;
+    max-width:1180px; margin:0 auto; gap:20px;
   }
+  .header-top > div:first-child{flex:1 1 auto; min-width:0;}
   h1{
     font-family:'JetBrains Mono',monospace;
     font-size:1.6rem; font-weight:700; margin:0 0 4px;
     letter-spacing:-0.01em;
   }
-  .subtitle{margin:0; color:var(--text-dim); font-size:0.92rem; max-width:52ch;}
+  .subtitle{margin:0; color:var(--text-dim); font-size:0.92rem; max-width:80ch;}
   .stats{
     font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:var(--accent);
     white-space:nowrap; padding-bottom:2px;
@@ -115,8 +116,13 @@
     text-decoration-color:var(--line); cursor:pointer; text-align:right;
   }
   .platform-toggle:hover{color:var(--accent); text-decoration-color:var(--accent-dim);}
-  .header-meta{display:flex; flex-direction:column; align-items:flex-end; gap:6px;}
-  @media (max-width:640px){ .header-meta{align-items:flex-start;} .platform-toggle{text-align:left;} }
+  .header-meta{display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex:none;}
+  /* Below the 3-column layout, stack the toggle and count under the title, aligned left. */
+  @media (max-width:980px){
+    .header-top{flex-direction:column; align-items:flex-start; gap:12px;}
+    .header-meta{align-items:flex-start;}
+    .platform-toggle{text-align:left;}
+  }
 
   /* Light/dark switch */
   .theme-toggle{
