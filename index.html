@@ -354,6 +354,7 @@
 //   trick:    { type:"trick",    label:"...", note:"..." }
 //   link:     { type:"link",     label:"...", url:"https://..." }
 // Any item can also have platform:"mac" or platform:"windows" to show only on that OS (it always shows in "show all" mode).
+// The "Firefox" and "Chrome / Edge" cards only show in their own browser (see BROWSER_EXCLUSIVE_TOOLS), again unless "show all" is on.
 // Sections are { name:"...", items:[ ... ] } (name can be null); tools are { tool:"...", sections:[ ... ] }.
 const DATA = [
   { tool: "Firefox", sections: [
@@ -539,6 +540,22 @@ function detectPlatform(){
   if(/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'other';
   if(/Mac/.test(ua)) return 'mac';
   if(/Win/.test(ua)) return 'windows';
+  return 'other';
+}
+
+// ---- Browser detection ----
+// Tool cards that only make sense in one browser. Opening the page in
+// Firefox hides the Chrome / Edge card, and vice versa.
+var BROWSER_EXCLUSIVE_TOOLS = { "Firefox":"firefox", "Chrome / Edge":"chromium" };
+
+// Returns 'firefox', 'chromium' (Chrome, Edge, and other Chromium browsers
+// like Brave), or 'other' (Safari, phones/tablets, anything unrecognised),
+// in which case both browser cards stay visible.
+function detectBrowser(){
+  var ua = navigator.userAgent || '';
+  if(/iPhone|iPod|iPad|Android/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'other';
+  if(/Firefox\//.test(ua)) return 'firefox';
+  if(/Edg\//.test(ua) || /Chrome\//.test(ua)) return 'chromium';
   return 'other';
 }
 
@@ -741,8 +758,12 @@ function moveCard(card, direction){
   announce(card.getAttribute('data-tool') + ' moved ' + direction + ', now position ' + (cards.indexOf(card)+1) + ' of ' + cards.length + '.');
 }
 
-// ---- Platform filtering: state + toggle ----
+// ---- Platform + browser filtering: state + toggle ----
+// One "show all" switch covers both: by default the page shows only your OS
+// and your browser; "show all" brings everything back.
 var detectedPlatform = detectPlatform(); // 'mac' | 'windows' | 'other'
+var detectedBrowser = detectBrowser();   // 'firefox' | 'chromium' | 'other'
+var canFilter = detectedPlatform !== 'other' || detectedBrowser !== 'other';
 var PLATFORM_MODE_KEY = 'shortcuts-platform-showall';
 function getShowAll(){
   try{ return localStorage.getItem(PLATFORM_MODE_KEY) === '1'; }catch(e){ return false; }
@@ -750,35 +771,52 @@ function getShowAll(){
 function setShowAll(val){
   try{ localStorage.setItem(PLATFORM_MODE_KEY, val ? '1' : '0'); }catch(e){}
 }
+// OS filter: 'mac' | 'windows' | 'all'
 function currentMode(){
   if(detectedPlatform === 'other') return 'all';
   return getShowAll() ? 'all' : detectedPlatform;
 }
+// Browser filter: 'firefox' | 'chromium' | 'all'
+function currentBrowserMode(){
+  if(detectedBrowser === 'other') return 'all';
+  return getShowAll() ? 'all' : detectedBrowser;
+}
 
 var platformToggle = document.getElementById('platform-toggle');
 var PLATFORM_LABEL = { mac: 'macOS', windows: 'Windows' };
-function updatePlatformToggle(mode){
-  if(detectedPlatform === 'other'){ platformToggle.hidden = true; return; }
+var BROWSER_LABEL = { firefox: 'Firefox', chromium: 'Chrome / Edge' };
+function filterLabel(){
+  var parts = [];
+  if(detectedPlatform !== 'other') parts.push(PLATFORM_LABEL[detectedPlatform]);
+  if(detectedBrowser !== 'other') parts.push(BROWSER_LABEL[detectedBrowser]);
+  return parts.join(' + ');
+}
+function updatePlatformToggle(showingAll){
+  if(!canFilter){ platformToggle.hidden = true; return; }
   platformToggle.hidden = false;
-  platformToggle.textContent = mode === 'all'
-    ? 'Showing all shortcuts — show ' + PLATFORM_LABEL[detectedPlatform] + ' only'
-    : 'Showing ' + PLATFORM_LABEL[detectedPlatform] + ' shortcuts — show all';
+  platformToggle.textContent = showingAll
+    ? 'Showing all shortcuts — show ' + filterLabel() + ' only'
+    : 'Showing ' + filterLabel() + ' shortcuts — show all';
 }
 platformToggle.addEventListener('click', function(){
   setShowAll(!getShowAll());
   renderAll();
 });
 
-// Returns the data to show for a mode: drops the other platform's exclusive cards,
-// drops items marked platform:"mac"/"windows" that don't match, and prunes anything left empty.
-function dataForMode(mode){
-  if(mode === 'all') return DATA;
+// Returns the data to show: drops the other platform's and other browser's
+// exclusive cards, drops items marked platform:"mac"/"windows" that don't
+// match, and prunes anything left empty.
+function dataForMode(mode, browserMode){
+  if(mode === 'all' && browserMode === 'all') return DATA;
   return DATA.filter(function(tool){
     var excl = PLATFORM_EXCLUSIVE_TOOLS[tool.tool];
-    return !excl || excl === mode;
+    if(excl && mode !== 'all' && excl !== mode) return false;
+    var bExcl = BROWSER_EXCLUSIVE_TOOLS[tool.tool];
+    if(bExcl && browserMode !== 'all' && bExcl !== browserMode) return false;
+    return true;
   }).map(function(tool){
     var sections = tool.sections.map(function(sec){
-      return { name: sec.name, items: sec.items.filter(function(it){ return !it.platform || it.platform === mode; }) };
+      return { name: sec.name, items: sec.items.filter(function(it){ return !it.platform || mode === 'all' || it.platform === mode; }) };
     }).filter(function(sec){ return sec.items.length > 0; });
     return { tool: tool.tool, sections: sections };
   }).filter(function(tool){ return tool.sections.length > 0; });
@@ -786,7 +824,7 @@ function dataForMode(mode){
 
 function renderAll(){
   var mode = currentMode();
-  var visibleData = dataForMode(mode);
+  var visibleData = dataForMode(mode, currentBrowserMode());
   totalCount = 0;
   visibleData.forEach(function(t){ t.sections.forEach(function(s){ totalCount += s.items.length; }); });
   totalTools = visibleData.length;
@@ -794,7 +832,7 @@ function renderAll(){
   applyOrder(DEFAULT_ORDER);
   applyOrder(getStoredOrder());
   updateMoveButtonStates();
-  updatePlatformToggle(mode);
+  updatePlatformToggle(getShowAll());
   applyFilter();
 }
 
