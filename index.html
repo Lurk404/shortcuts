@@ -472,6 +472,13 @@ const DATA = [
       { type:"shortcut", label:"Open DevTools", variants:[["Ctrl","Shift","I"],["Cmd","Opt","I"]] },
     ]},
   ]},
+    { tool: "Obsidian", sections: [
+    { name: null, items: [
+      { type:"shortcut", label:"Command palette", variants:[["Cmd","P"],["Ctrl","P"]] },
+      { type:"shortcut", label:"Quick Switcher", variants:[["Cmd","O"],["Ctrl","O"]] },
+      { type:"shortcut", label:"Vault search", variants:[["Cmd","Shift","F"],["Ctrl","Shift","F"]] },
+    ]},
+  ]},
   { tool: "macOS", sections: [
     { name: "System", items: [
       { type:"shortcut", label:"Show desktop", variants:[["Cmd","F3"]] },
@@ -599,7 +606,7 @@ const DATA = [
 // The order tool cards appear in by default. Just reorder these names —
 // no need to touch the DATA blocks above. Anything you drag/reorder in the
 // page itself is saved separately in your browser and takes priority over this.
-const DEFAULT_ORDER = ["Firefox","macOS","Rectangle","Terminal","Windows","Chrome / Edge","Word","Excel","Audacity","ShareX"];
+const DEFAULT_ORDER = ["Firefox","Obsidian","macOS","Rectangle","Terminal","Windows","Chrome / Edge","Word","Excel","Audacity","ShareX"];
 
 function esc(s){ return String(s).replace(/"/g,'&quot;'); }
 // Full escape for command text, which can contain & < > (e.g. "a && b", "ls > out.txt").
